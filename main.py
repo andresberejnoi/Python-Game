@@ -52,10 +52,23 @@ class CameraGroup(pygame.sprite.Group):
     def __init__(self):
         super().__init__()
         self.display_surface = pygame.display.get_surface()
+
+        #-- camera offset to account for player motion and keep it always centered
+        self.camera_offset      = pygame.math.Vector2()
+        self.half_screen_width  = self.display_surface.get_size()[0] // 2
+        self.half_screen_height = self.display_surface.get_size()[1] // 2
     
-    def custom_draw(self,):
-        for sprite in self.sprites():
-            self.display_surface.blit(sprite.image, sprite.rect) 
+    def center_camera_on_target(self, target):
+        self.camera_offset.x = target.rect.centerx - self.half_screen_width
+        self.camera_offset.y = target.rect.centery - self.half_screen_height
+
+    def custom_draw(self, player):
+        
+        self.center_camera_on_target(player)
+        
+        for sprite in sorted(self.sprites(), key = lambda sprite: sprite.rect.centery):  #sort sprites by their y-position
+            offset_vector = sprite.rect.topleft - self.camera_offset
+            self.display_surface.blit(sprite.image, offset_vector) 
 
 #=======================
 WHITE = (255, 255, 255)
@@ -108,7 +121,7 @@ while keep_running:
     #screen.blit(player_sprite, (0,0))
 
     camera_group.update()
-    camera_group.custom_draw()
+    camera_group.custom_draw(player)
 
     pygame.display.update()
 
