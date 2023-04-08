@@ -6,6 +6,11 @@ class SpriteSheet():
         self.single_width  = single_width
         self.single_height = single_height
 
+    @staticmethod
+    def load_from_file(spritesheet_file, single_width=24, single_height=24):
+        img = pygame.image.load(spritesheet_file).convert_alpha()
+        return SpriteSheet(img, single_width=single_width, single_height=single_height)
+
     def get_image(self, frame_pos, width=None, height=None, scale=1, chromakey=(0,0,0)):
         if width is None:
             width = self.single_width
