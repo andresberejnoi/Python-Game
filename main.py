@@ -58,6 +58,9 @@ class Rock(pygame.sprite.Sprite):
         self.image = image
         self.rect =  self.image.get_rect(topleft = pos)
 
+    def is_clicked(self):
+        print(f"Rock {self} was clicked!")
+
 
 class CameraGroup(pygame.sprite.Group):
     def __init__(self):
@@ -158,6 +161,7 @@ FPS   = 60
 SCREEN_WIDTH  = 960
 SCREEN_HEIGHT = 540 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+pygame.display.set_caption("Prototype Survival Game")
 
 #========================
 #-- Load Spritesheet
@@ -177,9 +181,15 @@ rock_spritesheet = spritesheet.SpriteSheet.load_from_file(os.path.join(graphics_
 #
 camera_group = CameraGroup()
 
-player_sprite = player_spritesheet.get_image((0,0), scale=3)
+player_sprite = player_spritesheet.get_image((0,0), scale=3, chromakey=BLACK)
 rock_sprite   = rock_spritesheet.get_image((0,0), scale=3, chromakey=WHITE)
 player = Player((0,0), camera_group, image=player_sprite)
+
+
+
+frame_0 = player_spritesheet.get_image((0,0), scale=3)
+frame_1 = player_spritesheet.get_image((1,0), scale=3)
+frame_2 = player_spritesheet.get_image((2,0), scale=3)
 
 rock_list = []
 for i in range(20):
@@ -206,16 +216,22 @@ while keep_running:
             camera_group.set_zoom_level(safe_zoom)
             #event.y = 0   
 
-        # elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:   #if left click was pressed
-        #     for rock in rock_list:
-        #         if rock.rect.collidepoint(event.pos):
-        #             rock.kill() 
-
-        if pygame.mouse.get_pressed() == (True, False, False):    #left click was pressed
-            mouse_pos = pygame.mouse.get_pos()
+        elif event.type == pygame.MOUSEBUTTONUP: # and event.button == 1:   #if left click was pressed
+            print(event)
             for rock in rock_list:
-                if rock.rect.collidepoint(mouse_pos):
-                    rock.kill()
+                if rock.rect.collidepoint(event.pos):
+                    print("rock has been clicked!!")
+                    rock.is_clicked() 
+
+        # if pygame.mouse.get_pressed() == (True, False, False):    #left click was pressed
+        #     mouse_pos = pygame.mouse.get_pos()
+        #     for rock in rock_list:
+        #         if rock.rect.collidepoint(mouse_pos):
+        #             rock.kill()
+
+    screen.blit(frame_0, (300,300))
+    screen.blit(frame_1, (350,350))
+    screen.blit(frame_2, (400,400))
 
     camera_group.update()
     camera_group.custom_draw(player)
