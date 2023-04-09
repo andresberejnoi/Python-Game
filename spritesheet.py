@@ -1,3 +1,9 @@
+'''
+This class helps in loading images from a spritesheet for animations. 
+I followed a tutorial used for this video:
+    * https://youtu.be/nXOVcOBqFwM
+'''
+
 import pygame
 
 class SpriteSheet():
