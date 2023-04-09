@@ -25,7 +25,7 @@ class SpriteSheet():
 
         if isinstance(frame_pos, tuple) or isinstance(frame_pos, list):
             frame_col = frame_pos[0]
-            frame_row = frame_pos[0]
+            frame_row = frame_pos[1]
         elif isinstance(frame_pos, int):
             frame_col = frame_pos
 
