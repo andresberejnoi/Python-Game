@@ -44,7 +44,7 @@ class Player(pygame.sprite.Sprite):
         else:
             self.direction.y = 0
 
-    def update(self):
+    def update(self, events=None):
         self.keyboard_input()
         self.rect.center += self.direction * self.speed
 
@@ -58,6 +58,12 @@ class Rock(pygame.sprite.Sprite):
         self.image = image
         self.rect =  self.image.get_rect(topleft = pos)
 
+    def update(self, events):
+        for event in events:
+            if event.type == pygame.MOUSEBUTTONUP:
+                if self.rect.collidepoint(event.pos):
+                    self.kill()
+    
     def is_clicked(self):
         print(f"Rock {self} was clicked!")
 
@@ -181,7 +187,7 @@ rock_spritesheet = spritesheet.SpriteSheet.load_from_file(os.path.join(graphics_
 #
 camera_group = CameraGroup()
 
-player_sprite = player_spritesheet.get_image((0,0), scale=3, chromakey=BLACK)
+player_sprite = player_spritesheet.get_image((2,0), scale=3, chromakey=BLACK)
 rock_sprite   = rock_spritesheet.get_image((0,0), scale=3, chromakey=WHITE)
 player = Player((0,0), camera_group, image=player_sprite)
 
@@ -205,7 +211,8 @@ while keep_running:
     clock.tick(FPS)
 
     # handle events
-    for event in pygame.event.get():
+    events = pygame.event.get()
+    for event in events:
         if event.type == pygame.QUIT:
             keep_running = False
 
@@ -233,7 +240,7 @@ while keep_running:
     screen.blit(frame_1, (350,350))
     screen.blit(frame_2, (400,400))
 
-    camera_group.update()
+    camera_group.update(events)
     camera_group.custom_draw(player)
 
     pygame.display.update()
