@@ -4,8 +4,8 @@ Credits and Resources
 ---------------------
 
 I followed a tutorial that helped me implement a camera
-that follows the player and can zoom in and out. The 
-tutorial is this:
+that follows the player and can zoom in and out.
+Here is the link:
     * https://youtu.be/u7LPRqrzry8
 """
 
@@ -18,14 +18,27 @@ import os
 
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, pos, group, image) -> None:
+    def __init__(self, pos, group, image, sprite_sheet=None, animation_speed=None,) -> None:
         super().__init__(group)
-        self.pos = pos
+        #self.pos = pos
         self.image = image
+        self.sprite_sheet = sprite_sheet   #contains a SpriteSheet object with different frames for animation
 
         self.rect = self.image.get_rect(center=pos)
         self.direction = pygame.math.Vector2()
         self.speed = 3
+
+        #-- Variables that control animation
+        self._animation_step     = 0
+        self._sprite_idx         = 0
+        self._animation_speed    = animation_speed or 2
+        self._frame_idx          = 0
+        self._standing_image_idx = 0   #index for default image when character is not moving
+        self.sprites_sequence    = self._extract_sprite_sequence(scale=3)
+        #self._frames_per_animation_step = 
+
+    def _extract_sprite_sequence(self, scale=3):
+        return self.sprite_sheet.get_all_sprites(scale=3)
 
     def keyboard_input(self):
         keys_pressed = pygame.key.get_pressed()
@@ -49,10 +62,53 @@ class Player(pygame.sprite.Sprite):
         self.rect.center += self.direction * self.speed
 
 
+        frames_per_animation_step = 5 // self._animation_speed
+        if frames_per_animation_step < 1:
+            frames_per_animation_step = 5
+
+        full_cycle_frames = frames_per_animation_step * len(self.sprites_sequence)
+        
+
+        #self._animation_step += 1
+        full_cycle_frames = FPS // self._animation_speed
+
+        full_cycle_frames += full_cycle_frames % len(self.sprites_sequence)  #make sure that there are always enough frames in a cycle for all sprites 
+        
+        assert(full_cycle_frames >= len(self.sprites_sequence))
+        assert(full_cycle_frames % len(self.sprites_sequence) == 0)
+
+        frames_per_animation_step = full_cycle_frames // len(self.sprites_sequence)
+        
+        #-- check if player is currently standing still
+        if self.direction.y == 0 and self.direction.x == 0:
+            self.image = self.sprites_sequence[self._standing_image_idx]
+            self._animation_step = 0
+
+        else:
+            # if self._animation_step % frames_per_animation_step:
+            #     pass
+            # self._sprite_idx = (self._sprite_idx + 1) % len(self.sprites_sequence)  #make sure sprite index is never greater than total available sprites, so they can cycle through
+            try:
+                print(f"Full Cycle Frames:{full_cycle_frames}\n",
+                      f"Animation Step: {self._animation_step}\n",
+                      f"Frames per animation step: {frames_per_animation_step}\n", 
+                      f"Sprite Index: {self._sprite_idx}\n")
+                
+                self._sprite_idx = self._animation_step // frames_per_animation_step
+                self.image = self.sprites_sequence[self._sprite_idx]
+
+            except IndexError:
+                print("ERROR WITH SPRITE_INDEX OUT OF BOUNDS!\n")
+
+
+            self._animation_step = (self._animation_step + 1) % full_cycle_frames   #animation step will always stay within the allowed frames per cycle
+
+
+
 class Rock(pygame.sprite.Sprite):
     def __init__(self, pos, group, image):
         super().__init__(group)
-        self.pos = pos
+        #self.pos = pos
 
         #self.image = pygame.image.load(os.path.join(graphics_folder, "rock.png")).convert_alpha()
         self.image = image
@@ -62,7 +118,7 @@ class Rock(pygame.sprite.Sprite):
         for event in events:
             if event.type == pygame.MOUSEBUTTONUP:
                 if self.rect.collidepoint(event.pos):
-                    self.kill()
+                    self.is_clicked()
     
     def is_clicked(self):
         print(f"Rock {self} was clicked!")
@@ -133,6 +189,7 @@ class CameraGroup(pygame.sprite.Group):
         for sprite in sorted(self.sprites(), key = lambda sprite: sprite.rect.centery):  #sort sprites by their y-position
             offset_vector = sprite.rect.topleft - self.camera_offset + self.internal_offset
             self.internal_surface.blit(sprite.image, offset_vector) 
+            pygame.draw.rect(self.internal_surface, RED, [0,0, sprite.rect.w, sprite.rect.h])
 
         scaled_surface = pygame.transform.scale(self.internal_surface, self.internal_surface_size_vector * self.zoom_level)
         scaled_rect    = scaled_surface.get_rect(center = (self.half_screen_width, self.half_screen_height))
@@ -153,6 +210,9 @@ class CameraGroup(pygame.sprite.Group):
 #=======================
 WHITE = (255, 255, 255)
 BLACK = (  0,   0,   0)
+RED   = (255,   0,   0)
+GREEN = (  0, 255,   0)
+BLUE  = (  0,   0, 255)
 
 SCREEN_FILL = (100,200,100)
 
@@ -188,8 +248,8 @@ rock_spritesheet = spritesheet.SpriteSheet.load_from_file(os.path.join(graphics_
 camera_group = CameraGroup()
 
 player_sprite = player_spritesheet.get_image((2,0), scale=3, chromakey=BLACK)
-rock_sprite   = rock_spritesheet.get_image((0,0), scale=3, chromakey=WHITE)
-player = Player((0,0), camera_group, image=player_sprite)
+rock_sprite   = rock_spritesheet.get_image((0,0), scale=6, chromakey=WHITE)
+player = Player((0,0), camera_group, image=player_sprite, sprite_sheet=player_spritesheet)
 
 
 
@@ -198,7 +258,7 @@ frame_1 = player_spritesheet.get_image((1,0), scale=3)
 frame_2 = player_spritesheet.get_image((2,0), scale=3)
 
 rock_list = []
-for i in range(20):
+for i in range(5):
     rand_x = random.randint(0,1300)
     rand_y = random.randint(0,1300)
     rock_list.append(Rock((rand_x, rand_y), camera_group, image=rock_sprite))
@@ -226,9 +286,10 @@ while keep_running:
         elif event.type == pygame.MOUSEBUTTONUP: # and event.button == 1:   #if left click was pressed
             print(event)
             for rock in rock_list:
+                print("Rock:", rock.rect.center)
                 if rock.rect.collidepoint(event.pos):
                     print("rock has been clicked!!")
-                    rock.is_clicked() 
+                    rock.kill() 
 
         # if pygame.mouse.get_pressed() == (True, False, False):    #left click was pressed
         #     mouse_pos = pygame.mouse.get_pos()
