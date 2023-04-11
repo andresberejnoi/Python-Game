@@ -89,6 +89,9 @@ class Player(pygame.sprite.Sprite):
             self.image = self.sprites_sequence[self._sprite_idx]
             self._animation_step = (self._animation_step + 1) % full_cycle_frames
 
+        mouse_x_pos = pygame.mouse.get_pos()[0]
+        if mouse_x_pos < SCREEN_WIDTH // 2:
+            self.image = pygame.transform.flip(self.image, flip_x = True, flip_y=False,).convert_alpha()
         
 class Rock(pygame.sprite.Sprite):
     def __init__(self, pos, group, image):
