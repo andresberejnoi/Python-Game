@@ -10,8 +10,6 @@ Here is the link:
 """
 
 import pygame
-import agents
-import objects
 import spritesheet
 import random
 import os
@@ -31,10 +29,12 @@ class Player(pygame.sprite.Sprite):
         #-- Variables that control animation
         self._animation_step     = 0
         self._sprite_idx         = 0
-        self._animation_speed    = animation_speed or 2
+        self._animation_speed    = animation_speed or 1
         self._frame_idx          = 0
         self._standing_image_idx = 0   #index for default image when character is not moving
         self.sprites_sequence    = self._extract_sprite_sequence(scale=3)
+
+        self._frames_per_animation_step = 4
         #self._frames_per_animation_step = 
 
     def _extract_sprite_sequence(self, scale=3):
@@ -57,54 +57,39 @@ class Player(pygame.sprite.Sprite):
         else:
             self.direction.y = 0
 
+
+    @property
+    def frames_per_animation_step(self):
+        return self._frames_per_animation_step
+    
+    @frames_per_animation_step.setter
+    def frames_per_animation_step(self, new_val):
+        if new_val < 1:
+            #no change, use current value
+            pass
+        else:
+            self._frames_per_animation_step = new_val
+    
     def update(self, events=None):
         self.keyboard_input()
         self.rect.center += self.direction * self.speed
 
 
-        frames_per_animation_step = 5 // self._animation_speed
-        if frames_per_animation_step < 1:
-            frames_per_animation_step = 5
+        self.frames_per_animation_step = 4 // self._animation_speed
 
-        full_cycle_frames = frames_per_animation_step * len(self.sprites_sequence)
-        
+        full_cycle_frames = self.frames_per_animation_step * len(self.sprites_sequence)
 
-        #self._animation_step += 1
-        full_cycle_frames = FPS // self._animation_speed
-
-        full_cycle_frames += full_cycle_frames % len(self.sprites_sequence)  #make sure that there are always enough frames in a cycle for all sprites 
-        
-        assert(full_cycle_frames >= len(self.sprites_sequence))
-        assert(full_cycle_frames % len(self.sprites_sequence) == 0)
-
-        frames_per_animation_step = full_cycle_frames // len(self.sprites_sequence)
-        
         #-- check if player is currently standing still
         if self.direction.y == 0 and self.direction.x == 0:
             self.image = self.sprites_sequence[self._standing_image_idx]
             self._animation_step = 0
-
+        
         else:
-            # if self._animation_step % frames_per_animation_step:
-            #     pass
-            # self._sprite_idx = (self._sprite_idx + 1) % len(self.sprites_sequence)  #make sure sprite index is never greater than total available sprites, so they can cycle through
-            try:
-                print(f"Full Cycle Frames:{full_cycle_frames}\n",
-                      f"Animation Step: {self._animation_step}\n",
-                      f"Frames per animation step: {frames_per_animation_step}\n", 
-                      f"Sprite Index: {self._sprite_idx}\n")
-                
-                self._sprite_idx = self._animation_step // frames_per_animation_step
-                self.image = self.sprites_sequence[self._sprite_idx]
+            self._sprite_idx = self._animation_step // self.frames_per_animation_step
+            self.image = self.sprites_sequence[self._sprite_idx]
+            self._animation_step = (self._animation_step + 1) % full_cycle_frames
 
-            except IndexError:
-                print("ERROR WITH SPRITE_INDEX OUT OF BOUNDS!\n")
-
-
-            self._animation_step = (self._animation_step + 1) % full_cycle_frames   #animation step will always stay within the allowed frames per cycle
-
-
-
+        
 class Rock(pygame.sprite.Sprite):
     def __init__(self, pos, group, image):
         super().__init__(group)
