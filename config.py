@@ -1,11 +1,8 @@
 
 
 #==========================
-SCREEN_PARAMS = {
-    'width'  : 960,
-    'height' : 540
-}
-
+SCREEN_WIDTH  = 960
+SCREEN_HEIGHT = 540
 #==========================
 #-- Colors
 WHITE = (255, 255, 255)
@@ -18,3 +15,7 @@ SCREEN_FILL = (100,200,100)
 
 #==========================
 FPS = 60
+
+#==========================
+#-- Paths
+GRAPHICS_FOLDER = "sprites"
