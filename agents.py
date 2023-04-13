@@ -1,11 +1,12 @@
 import pygame
 import spritesheet
+from config import *
 
 class BaseAgent(pygame.sprite.Sprite):
-    def __init__(self, pos, groups, collision_group, image, spritesheet=None, animation_speed=None):
-        super.__init__(groups)
+    def __init__(self, pos, groups, collision_group, image=None, spritesheet=None, animation_speed=None):
+        super().__init__(groups)
 
-        self.image = image
+        self.image = image or pygame.Surface((50,50))
         self.spritesheet = spritesheet
 
         #-- Rectangle and position elements
@@ -32,11 +33,25 @@ class BaseAgent(pygame.sprite.Sprite):
         self._sprites_sequence = self._extract_sprite_sequence(scale=3)
 
     def _extract_sprite_sequence(self, scale=3):
-        return self.spritesheet.get_all_sprites(scale=3)
+        if self.spritesheet:
+            return self.spritesheet.get_all_sprites(scale=3)
+        else:
+            return []
+        
+    @property
+    def frames_per_animation_step(self):
+        return self._frames_per_animation_step
     
+    @frames_per_animation_step.setter
+    def frames_per_animation_step(self, new_val):
+        if new_val < 1:
+            pass#no change, use current value
+        else:
+            self._frames_per_animation_step = new_val
+
+
     def collision_calculation(self, direction='horizontal'):
         for sprite in self.collision_group.sprites():
-            pygame.draw.rect(screen, RED, sprite.hitbox_rect, 1)
             if sprite.hitbox_rect.colliderect(self.hitbox_rect):
                 if direction == 'horizontal':
                     if self.direction.x < 0:   #player was moving right to left
@@ -57,3 +72,71 @@ class BaseAgent(pygame.sprite.Sprite):
 
                     self.rect.centery = self.hitbox_rect.centery
                     self.pos.y        = self.hitbox_rect.centery
+
+
+    def _animation_control(self):
+       
+        self.frames_per_animation_step = 4 // self._animation_speed
+        full_cycle_frames = self.frames_per_animation_step * len(self._sprites_sequence)
+
+        #-- check if player is currently standing still
+        if self.direction.y == 0 and self.direction.x == 0:
+            self.image = self._sprites_sequence[self._idle_sprite_idx]
+            self._animation_step = 0
+        
+        else:
+            self._sprite_idx = self._animation_step // self.frames_per_animation_step
+            self.image = self._sprites_sequence[self._sprite_idx]
+            self._animation_step = (self._animation_step + 1) % full_cycle_frames
+
+        #-- keep character sprite facing the mouse x position
+        mouse_x_pos = pygame.mouse.get_pos()[0]
+        if mouse_x_pos < self.pos.x:
+            self.image = pygame.transform.flip(self.image, flip_x = True, flip_y=False,).convert_alpha()
+
+class Player(BaseAgent):
+    def __init__(self, pos, groups, collision_group, image=None, spritesheet=None, animation_speed=1):
+        super().__init__(pos, groups, collision_group, image, spritesheet, animation_speed)
+
+    def keyboard_input(self):
+        keys_pressed = pygame.key.get_pressed()
+
+        if keys_pressed[pygame.K_a]:
+            self.direction.x = -1
+        elif keys_pressed[pygame.K_d]:
+            self.direction.x = 1
+        else:
+            self.direction.x = 0
+
+        if keys_pressed[pygame.K_w]:
+            self.direction.y = -1
+        elif keys_pressed[pygame.K_s]:
+            self.direction.y = 1 
+        else:
+            self.direction.y = 0
+    
+    
+    def update(self, events=None):
+        self.keyboard_input()
+
+        #-- Update coordinates in HORIZONTAL direction
+        self.pos.x += self.direction.x * self.speed
+        self.hitbox_rect.centerx = round(self.pos.x)
+        self.rect.centerx = self.hitbox_rect.centerx
+
+        self.collision_calculation(direction='horizontal')
+
+        #-- Update coordinates in VERTICAL direction
+        self.pos.y += self.direction.y * self.speed
+        self.hitbox_rect.centery = round(self.pos.y)
+        self.rect.centery = self.hitbox_rect.centery
+
+        self.collision_calculation(direction='vertical')
+
+        #-- Update sprite based on animation sequence
+        self._animation_control()
+        
+
+    
+
+        
