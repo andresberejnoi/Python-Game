@@ -16,13 +16,25 @@ import os
 
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, pos, group, image, sprite_sheet=None, animation_speed=None,) -> None:
+    def __init__(self, pos, group, image, collision_group, sprite_sheet=None, animation_speed=None,) -> None:
         super().__init__(group)
-        #self.pos = pos
+        
+        
         self.image = image
         self.sprite_sheet = sprite_sheet   #contains a SpriteSheet object with different frames for animation
 
         self.rect = self.image.get_rect(center=pos)
+        self.pos  = pygame.math.Vector2(self.rect.center)
+
+        #-- Collision Variables
+        self._hitbox_shrink_x_factor = 0.15
+        self._hitbox_shrink_y_factor = 0.75
+        self.hitbox_rect = self.rect.copy().inflate(-self.rect.width * self._hitbox_shrink_x_factor, 
+                                                    -self.rect.height * self._hitbox_shrink_y_factor)    #use this variable to keep track of the objects drawing position
+        
+        self.collision_group = collision_group
+
+        #-- Motion Variables
         self.direction = pygame.math.Vector2()
         self.speed = 3
 
@@ -70,13 +82,50 @@ class Player(pygame.sprite.Sprite):
         else:
             self._frames_per_animation_step = new_val
     
+    def collision_calculation(self, direction='horizontal'):
+        for sprite in self.collision_group.sprites():
+            pygame.draw.rect(screen, RED, sprite.hitbox_rect, 1)
+            if sprite.hitbox_rect.colliderect(self.hitbox_rect):
+                if direction == 'horizontal':
+                    if self.direction.x < 0:   #player was moving right to left
+                        self.hitbox_rect.left = sprite.hitbox_rect.right
+
+                    elif self.direction.x > 0:  #player was moving left to right
+                        self.hitbox_rect.right = sprite.hitbox_rect.left
+
+                    self.rect.centerx = self.hitbox_rect.centerx
+                    self.pos.x        = self.hitbox_rect.centerx
+
+                elif direction == 'vertical':
+                    if self.direction.y < 0: #player was moving from bottom to top
+                        self.hitbox_rect.top = sprite.hitbox_rect.bottom 
+
+                    elif self.direction.y > 0: #player was moving from top to bottom
+                        self.hitbox_rect.bottom = sprite.hitbox_rect.top
+
+                    self.rect.centery = self.hitbox_rect.centery
+                    self.pos.y        = self.hitbox_rect.centery
+
     def update(self, events=None):
         self.keyboard_input()
-        self.rect.center += self.direction * self.speed
+
+        #-- Update coordinates in HORIZONTAL direction
+        self.pos.x += self.direction.x * self.speed
+        self.hitbox_rect.centerx = round(self.pos.x)
+        self.rect.centerx = self.hitbox_rect.centerx
+
+        self.collision_calculation(direction='horizontal')
+
+        #-- Update coordinates in VERTICAL direction
+        self.pos.y += self.direction.y * self.speed
+        self.hitbox_rect.centery = round(self.pos.y)
+        self.rect.centery = self.hitbox_rect.centery
+
+        self.collision_calculation(direction='vertical')
 
 
+        #-- Animate (I should probably move this section below to a separate function)
         self.frames_per_animation_step = 4 // self._animation_speed
-
         full_cycle_frames = self.frames_per_animation_step * len(self.sprites_sequence)
 
         #-- check if player is currently standing still
@@ -89,6 +138,7 @@ class Player(pygame.sprite.Sprite):
             self.image = self.sprites_sequence[self._sprite_idx]
             self._animation_step = (self._animation_step + 1) % full_cycle_frames
 
+        #-- keep character sprite facing the mouse x position
         mouse_x_pos = pygame.mouse.get_pos()[0]
         if mouse_x_pos < SCREEN_WIDTH // 2:
             self.image = pygame.transform.flip(self.image, flip_x = True, flip_y=False,).convert_alpha()
@@ -96,19 +146,29 @@ class Player(pygame.sprite.Sprite):
 class Rock(pygame.sprite.Sprite):
     def __init__(self, pos, group, image):
         super().__init__(group)
-        #self.pos = pos
 
         #self.image = pygame.image.load(os.path.join(graphics_folder, "rock.png")).convert_alpha()
         self.image = image
         self.rect =  self.image.get_rect(topleft = pos)
+        self.pos  = pygame.math.Vector2(self.rect.center)
+
+        #self.offset_rect = self.rect.copy()    #use this variable to keep track of the objects drawing position
+        #self.hitbox_rect = self.rect.copy()    #use this variable to keep track of the objects drawing position
+        self._hitbox_shrink_x_factor = 0.15
+        self._hitbox_shrink_y_factor = 0.75
+        self.hitbox_rect = self.rect.copy().inflate(-self.rect.width * self._hitbox_shrink_x_factor, 
+                                                    -self.rect.height * self._hitbox_shrink_y_factor)    #use this variable to keep track of the objects drawing position
+
 
     def update(self, events):
-        for event in events:
-            if event.type == pygame.MOUSEBUTTONUP:
-                if self.rect.collidepoint(event.pos):
-                    self.is_clicked()
+        pass
+        # for event in events:
+        #     if event.type == pygame.MOUSEBUTTONUP:
+        #         if self.hitbox_rect.collidepoint(event.pos):
+        #             self.click_action()
+        #             self.kill()
     
-    def is_clicked(self):
+    def click_action(self):
         print(f"Rock {self} was clicked!")
 
 
@@ -176,14 +236,34 @@ class CameraGroup(pygame.sprite.Group):
 
         for sprite in sorted(self.sprites(), key = lambda sprite: sprite.rect.centery):  #sort sprites by their y-position
             offset_vector = sprite.rect.topleft - self.camera_offset + self.internal_offset
-            self.internal_surface.blit(sprite.image, offset_vector) 
-            pygame.draw.rect(self.internal_surface, RED, [0,0, sprite.rect.w, sprite.rect.h])
+
+            sprite.hitbox_rect = self.internal_surface.blit(sprite.image, offset_vector)  #get rectangle of the images just blitted
+            old_hitbox_topleft = sprite.hitbox_rect.topleft
+
+            pygame.draw.rect(self.internal_surface, RED, sprite.hitbox_rect, 1)
+            
+            sprite.hitbox_rect.scale_by_ip(self.zoom_level)
+
+            #--update hitbox again to have same topleft as before scaling
+            scaled_hitbox_topleft = (round(old_hitbox_topleft[0] * self.zoom_level), round(old_hitbox_topleft[1] * self.zoom_level))
+
+            # print(f"Old Hitbox Topleft: {old_hitbox_topleft}")
+            # print(f"New Hitbox Topleft: {scaled_hitbox_topleft}\n")
+
+            sprite.hitbox_rect.topleft = scaled_hitbox_topleft
+
 
         scaled_surface = pygame.transform.scale(self.internal_surface, self.internal_surface_size_vector * self.zoom_level)
         scaled_rect    = scaled_surface.get_rect(center = (self.half_screen_width, self.half_screen_height))
 
+        self._DRAW_BOXES_OFFSET_RECT_TEST(scaled_surface)
+        
         #-- draw regular display onto zoom display
         self.display_surface.blit(scaled_surface, scaled_rect)
+
+    def _DRAW_BOXES_OFFSET_RECT_TEST(self, surface):
+        for sprite in sorted(self.sprites(), key = lambda sprite: sprite.rect.centery):
+            pygame.draw.rect(surface, RED, sprite.hitbox_rect, 1)
 
     def BACKUP_custom_draw(self, player):
         '''custom draw containing only the code to keep player centered and dynamic depth drawing. No zoom here.'''
@@ -234,10 +314,11 @@ rock_spritesheet = spritesheet.SpriteSheet.load_from_file(os.path.join(graphics_
 
 #
 camera_group = CameraGroup()
+collision_group = pygame.sprite.Group()
 
 player_sprite = player_spritesheet.get_image((2,0), scale=3, chromakey=BLACK)
 rock_sprite   = rock_spritesheet.get_image((0,0), scale=6, chromakey=WHITE)
-player = Player((0,0), camera_group, image=player_sprite, sprite_sheet=player_spritesheet)
+player = Player((0,0), camera_group, image=player_sprite, collision_group=collision_group, sprite_sheet=player_spritesheet)
 
 
 
@@ -249,7 +330,7 @@ rock_list = []
 for i in range(5):
     rand_x = random.randint(0,1300)
     rand_y = random.randint(0,1300)
-    rock_list.append(Rock((rand_x, rand_y), camera_group, image=rock_sprite))
+    rock_list.append(Rock((rand_x, rand_y), [camera_group, collision_group], image=rock_sprite))
 
 #========================
 # MAIN LOOP
@@ -274,8 +355,8 @@ while keep_running:
         elif event.type == pygame.MOUSEBUTTONUP: # and event.button == 1:   #if left click was pressed
             print(event)
             for rock in rock_list:
-                print("Rock:", rock.rect.center)
-                if rock.rect.collidepoint(event.pos):
+                print("Rock:", rock.hitbox_rect)
+                if rock.hitbox_rect.collidepoint(event.pos):
                     print("rock has been clicked!!")
                     rock.kill() 
 
