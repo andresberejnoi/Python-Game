@@ -43,7 +43,6 @@ class SpriteSheet():
         img.blit(self.sheet, (0,0), ((frame_col * width), (frame_row * height), width, height))
 
         img = pygame.transform.scale(img, (width * scale, height * scale))
-        print("Setting Chromakey to:", chromakey)
         img.set_colorkey(chromakey)
 
         return img
