@@ -6,18 +6,20 @@ class BaseAgent(pygame.sprite.Sprite):
     def __init__(self, pos, groups, collision_group, image=None, spritesheet=None, animation_speed=None):
         super().__init__(groups)
 
-        self.image = image or pygame.Surface((50,50))
+        if image is None:
+            self.image = spritesheet.get_image((0,0), scale=3)
         self.spritesheet = spritesheet
 
         #-- Rectangle and position elements
-        self.rect = self.image.get_rect(center = pos)
+        #self.rect = self.image.get_rect(center = pos)
+        self.rect = self.image.get_rect(topleft = pos)
         self.pos  = pygame.math.Vector2(self.rect.center)
 
         #-- Collision elements
         self.collision_group = collision_group
-        self._hitbox_shrink_x_factor = 0.15
+        self._hitbox_shrink_x_factor = 0.35
         self._hitbox_shrink_y_factor = 0.80
-        self.hitbox_rect = self.rect.copy().inflate(-self.rect.width * self._hitbox_shrink_x_factor,  #make hitbox rect slightly smaller than image rect
+        self._hitbox_rect = self.rect.copy().inflate(-self.rect.width * self._hitbox_shrink_x_factor,  #make hitbox rect slightly smaller than image rect
                                                     -self.rect.height * self._hitbox_shrink_y_factor)
         
         #-- Motion and speed elements
@@ -31,6 +33,14 @@ class BaseAgent(pygame.sprite.Sprite):
         self._sprite_idx       = 0
         self._frame_idx        = 0
         self._sprites_sequence = self._extract_sprite_sequence(scale=3)
+
+    @property
+    def hitbox_rect(self):
+        return self._hitbox_rect
+    
+    # @hitbox_rect.setter
+    # def hitbox_rect(self, new_rect):
+
 
     def _extract_sprite_sequence(self, scale=3):
         if self.spritesheet:
