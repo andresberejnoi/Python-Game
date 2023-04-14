@@ -1,7 +1,14 @@
 import pygame
 
 class PrimordialSprite(pygame.sprite.Sprite):
-    def __init__(self, pos, groups, image=None, spritesheet=None, animation_speed=None, can_collide=True):
+    def __init__(self, 
+                 pos, 
+                 groups, 
+                 image=None, 
+                 spritesheet=None, 
+                 animation_speed=None, 
+                 can_collide=True,
+                 hitbox_shrink_factor:int | tuple |list = (0.30, 0.85)):
         super().__init__(groups)
 
         if image is None:
@@ -19,15 +26,20 @@ class PrimordialSprite(pygame.sprite.Sprite):
         self.pos  = pygame.math.Vector2(self.rect.center)
 
         #-- Collision elements
-        self._hitbox_shrink_x_factor = 0.35
-        self._hitbox_shrink_y_factor = 0.80
+        if isinstance(hitbox_shrink_factor, float):
+            self._hitbox_shrink_x_factor = hitbox_shrink_factor
+            self._hitbox_shrink_y_factor = hitbox_shrink_factor
+        else:
+            self._hitbox_shrink_x_factor = hitbox_shrink_factor[0]
+            self._hitbox_shrink_y_factor = hitbox_shrink_factor[1]
+
+        print(hitbox_shrink_factor)
+        print(self._hitbox_shrink_x_factor, self._hitbox_shrink_y_factor)
+
         self._hitbox_rect = self.rect.copy().inflate(-self.rect.width * self._hitbox_shrink_x_factor,  #make hitbox rect slightly smaller than image rect
                                                     -self.rect.height * self._hitbox_shrink_y_factor)
+        self._hitbox_rect.bottom = self.rect.bottom
         
-        self.test_rect = self.rect.copy().inflate(-self.rect.width * self._hitbox_shrink_x_factor,  #make hitbox rect slightly smaller than image rect
-                                                  -self.rect.height * self._hitbox_shrink_y_factor)
-        self.test_rect.bottom = self.rect.bottom
-
         #-- Animation elements
         self._animation_speed  = animation_speed or 1
         self._animation_step   = 0
