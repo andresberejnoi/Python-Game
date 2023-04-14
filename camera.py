@@ -33,5 +33,6 @@ class Camera(pygame.sprite.Group):
         for sprite in sorted(self.sprites(), key = lambda sprite: sprite.rect.centery):
             pygame.draw.rect(self.display_surface, RED, sprite.hitbox_rect, 1)
             pygame.draw.rect(self.display_surface, DARKVIOLET, sprite.rect, 1)
+            pygame.draw.rect(self.display_surface, BLUE, sprite.test_rect, 1)
             self.display_surface.blit(sprite.image, sprite.rect)
 
