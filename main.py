@@ -81,11 +81,15 @@ while keep_running:
         if event.type == pygame.QUIT:
             keep_running = False
 
+        # detect zoom from mousewheel
+        elif event.type == pygame.MOUSEWHEEL:
+            camera_group.zoom_level += event.y * 0.03
     #===========================
     #-- Display
     #screen.blit(player.image, player.pos, player.rect)
     camera_group.update()
-    camera_group.custom_draw(player)
+    #camera_group.custom_draw(player)
+    camera_group.custom_draw_with_zoom(player)
     
     #===========================
     #-- Update display at the end of each loop
