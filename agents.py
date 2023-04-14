@@ -11,8 +11,8 @@ class BaseAgent(pygame.sprite.Sprite):
         self.spritesheet = spritesheet
 
         #-- Rectangle and position elements
-        #self.rect = self.image.get_rect(center = pos)
-        self.rect = self.image.get_rect(topleft = pos)
+        self.rect = self.image.get_rect(center = pos)
+        #self.rect = self.image.get_rect(topleft = pos)
         self.pos  = pygame.math.Vector2(self.rect.center)
 
         #-- Collision elements
@@ -22,6 +22,10 @@ class BaseAgent(pygame.sprite.Sprite):
         self._hitbox_rect = self.rect.copy().inflate(-self.rect.width * self._hitbox_shrink_x_factor,  #make hitbox rect slightly smaller than image rect
                                                     -self.rect.height * self._hitbox_shrink_y_factor)
         
+        self.test_rect = self.rect.copy().inflate(-self.rect.width * self._hitbox_shrink_x_factor,  #make hitbox rect slightly smaller than image rect
+                                                  -self.rect.height * self._hitbox_shrink_y_factor)
+        self.test_rect.bottom = self.rect.bottom
+
         #-- Motion and speed elements
         self.direction = pygame.math.Vector2()
         self.speed     = 3
@@ -134,12 +138,17 @@ class Player(BaseAgent):
         self.hitbox_rect.centerx = round(self.pos.x)
         self.rect.centerx = self.hitbox_rect.centerx
 
+        self.test_rect.centerx = self.rect.centerx
+
         self.collision_calculation(direction='horizontal')
 
         #-- Update coordinates in VERTICAL direction
         self.pos.y += self.direction.y * self.speed
         self.hitbox_rect.centery = round(self.pos.y)
         self.rect.centery = self.hitbox_rect.centery
+
+
+        self.test_rect.bottom = self.rect.bottom
 
         self.collision_calculation(direction='vertical')
 

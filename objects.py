@@ -18,6 +18,9 @@ class BaseObject(pygame.sprite.Sprite):
         self.hitbox_rect = self.rect.copy().inflate(-self.rect.width * self._hitbox_shrink_x_factor,  #make hitbox rect slightly smaller than image rect
                                                     -self.rect.height * self._hitbox_shrink_y_factor)
 
+        self.test_rect = self.rect.copy().inflate(-self.rect.width * self._hitbox_shrink_x_factor,  #make hitbox rect slightly smaller than image rect
+                                                  -self.rect.height * self._hitbox_shrink_y_factor)
+        self.test_rect.bottom = self.rect.bottom
 
 class Rock(BaseObject):
     def __init__(self, pos, groups, image, spritesheet=None, animation_speed=1):
