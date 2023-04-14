@@ -62,8 +62,9 @@ class BaseAgent(PrimordialSprite):
 
         #-- keep character sprite facing the mouse x position
         mouse_x_pos = pygame.mouse.get_pos()[0]
-        if mouse_x_pos < self.pos.x:
+        if mouse_x_pos < pygame.display.get_window_size()[0] // 2:
             self.image = pygame.transform.flip(self.image, flip_x = True, flip_y=False,).convert_alpha()
+
 
 class Player(BaseAgent):
     def __init__(self, pos, groups, collision_group, image=None, spritesheet=None, animation_speed=1, **kwargs):
