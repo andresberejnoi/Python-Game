@@ -30,9 +30,19 @@ class Camera(pygame.sprite.Group):
         self.center_camera_on_target(player)
         #self.zoom_keys()
 
-        for sprite in sorted(self.sprites(), key = lambda sprite: sprite.rect.centery):
+        _sorted_sprites = self._sort_sprites(sort_target='hitbox')
+        #for sprite in sorted(self.sprites(), key = lambda sprite: sprite.rect.centery):
+        for sprite in _sorted_sprites:
             pygame.draw.rect(self.display_surface, RED, sprite.hitbox_rect, 1)
             pygame.draw.rect(self.display_surface, DARKVIOLET, sprite.rect, 1)
-            pygame.draw.rect(self.display_surface, BLUE, sprite.test_rect, 1)
+            #pygame.draw.rect(self.display_surface, BLUE, sprite.test_rect, 1)
             self.display_surface.blit(sprite.image, sprite.rect)
 
+    def _sort_sprites(self, sort_target='hitbox'):
+        if sort_target.lower() == 'hitbox':
+            _sorted = sorted(self.sprites(), key = lambda sprite: sprite.hitbox_rect.top)
+        
+        elif sort_target.lower() == 'center':
+            _sorted = sorted(self.sprites(), key = lambda sprite: sprite.rect.centery)
+
+        return _sorted
