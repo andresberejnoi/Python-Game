@@ -1,14 +1,16 @@
 import pygame
 import spritesheet
 from config import *
+from base_sprite import PrimordialSprite
 
-class BaseAgent(pygame.sprite.Sprite):
-    def __init__(self, pos, groups, collision_group, image=None, spritesheet=None, animation_speed=None):
-        super().__init__(groups)
+#class BaseAgent(pygame.sprite.Sprite):
+class BaseAgent(PrimordialSprite):
+    def __init__(self, pos, groups, collision_group, image = None, spritesheet = None, animation_speed = None, hitbox_shrink_factor = (0.3, 0.85), **kwargs):
+        super().__init__(pos=pos, groups=groups, image=image, spritesheet=spritesheet, animation_speed=animation_speed, hitbox_shrink_factor=hitbox_shrink_factor, can_collide=kwargs.get('can_collide', True))
 
-        if image is None:
-            self.image = spritesheet.get_image((0,0), scale=3)
-        self.spritesheet = spritesheet
+        # if image is None:
+        #     self.image = spritesheet.get_image((0,0), scale=3)
+        # self.spritesheet = spritesheet
 
         #-- Rectangle and position elements
         self.rect = self.image.get_rect(center = pos)
@@ -17,26 +19,28 @@ class BaseAgent(pygame.sprite.Sprite):
 
         #-- Collision elements
         self.collision_group = collision_group
-        self._hitbox_shrink_x_factor = 0.35
-        self._hitbox_shrink_y_factor = 0.80
-        self._hitbox_rect = self.rect.copy().inflate(-self.rect.width * self._hitbox_shrink_x_factor,  #make hitbox rect slightly smaller than image rect
-                                                    -self.rect.height * self._hitbox_shrink_y_factor)
+        # self._hitbox_shrink_x_factor = 0.35
+        # self._hitbox_shrink_y_factor = 0.85
+        # self._hitbox_rect = self.rect.copy().inflate(-self.rect.width * self._hitbox_shrink_x_factor,  #make hitbox rect slightly smaller than image rect
+        #                                             -self.rect.height * self._hitbox_shrink_y_factor)
+        # self._hitbox_rect.bottom = self.rect.bottom
         
-        self.test_rect = self.rect.copy().inflate(-self.rect.width * self._hitbox_shrink_x_factor,  #make hitbox rect slightly smaller than image rect
-                                                  -self.rect.height * self._hitbox_shrink_y_factor)
-        self.test_rect.bottom = self.rect.bottom
+        
+        # self.test_rect = self.rect.copy().inflate(-self.rect.width * self._hitbox_shrink_x_factor,  #make hitbox rect slightly smaller than image rect
+        #                                           -self.rect.height * self._hitbox_shrink_y_factor)
+        # self.test_rect.bottom = self.rect.bottom
 
         #-- Motion and speed elements
         self.direction = pygame.math.Vector2()
         self.speed     = 3
 
-        #-- Animation elements
-        self._animation_speed  = animation_speed or 1
-        self._animation_step   = 0
-        self._idle_sprite_idx  = 0
-        self._sprite_idx       = 0
-        self._frame_idx        = 0
-        self._sprites_sequence = self._extract_sprite_sequence(scale=3)
+        # #-- Animation elements
+        # self._animation_speed  = animation_speed or 1
+        # self._animation_step   = 0
+        # self._idle_sprite_idx  = 0
+        # self._sprite_idx       = 0
+        # self._frame_idx        = 0
+        # self._sprites_sequence = self._extract_sprite_sequence(scale=3)
 
     @property
     def hitbox_rect(self):
@@ -46,23 +50,46 @@ class BaseAgent(pygame.sprite.Sprite):
     # def hitbox_rect(self, new_rect):
 
 
-    def _extract_sprite_sequence(self, scale=3):
-        if self.spritesheet:
-            return self.spritesheet.get_all_sprites(scale=3)
-        else:
-            return []
+    # def _extract_sprite_sequence(self, scale=3):
+    #     if self.spritesheet:
+    #         return self.spritesheet.get_all_sprites(scale=3)
+    #     else:
+    #         return []
         
-    @property
-    def frames_per_animation_step(self):
-        return self._frames_per_animation_step
+    # @property
+    # def frames_per_animation_step(self):
+    #     return self._frames_per_animation_step
     
-    @frames_per_animation_step.setter
-    def frames_per_animation_step(self, new_val):
-        if new_val < 1:
-            pass#no change, use current value
-        else:
-            self._frames_per_animation_step = new_val
+    # @frames_per_animation_step.setter
+    # def frames_per_animation_step(self, new_val):
+    #     if new_val < 1:
+    #         pass#no change, use current value
+    #     else:
+    #         self._frames_per_animation_step = new_val
 
+
+    def _collision_calculation(self, direction='horizontal'):
+        for sprite in self.collision_group.sprites():
+            if sprite.hitbox_rect.colliderect(self.hitbox_rect):
+                if direction == 'horizontal':
+                    if self.direction.x < 0:   #player was moving right to left
+                        self.hitbox_rect.left = sprite.hitbox_rect.right
+
+                    elif self.direction.x > 0:  #player was moving left to right
+                        self.hitbox_rect.right = sprite.hitbox_rect.left
+
+                    self.rect.centerx = self.hitbox_rect.centerx
+                    self.pos.x        = self.hitbox_rect.centerx
+
+                elif direction == 'vertical':
+                    if self.direction.y < 0: #player was moving from bottom to top
+                        self.hitbox_rect.top = sprite.hitbox_rect.bottom 
+
+                    elif self.direction.y > 0: #player was moving from top to bottom
+                        self.hitbox_rect.bottom = sprite.hitbox_rect.top
+
+                    self.rect.centery = self.hitbox_rect.bottom - self.rect.height // 2
+                    self.pos.y        = self.hitbox_rect.bottom - self.rect.height // 2
 
     def collision_calculation(self, direction='horizontal'):
         for sprite in self.collision_group.sprites():
@@ -84,8 +111,8 @@ class BaseAgent(pygame.sprite.Sprite):
                     elif self.direction.y > 0: #player was moving from top to bottom
                         self.hitbox_rect.bottom = sprite.hitbox_rect.top
 
-                    self.rect.centery = self.hitbox_rect.centery
-                    self.pos.y        = self.hitbox_rect.centery
+                    self.rect.centery = self.hitbox_rect.bottom - self.rect.height // 2
+                    self.pos.y        = self.hitbox_rect.bottom - self.rect.height // 2
 
 
     def _animation_control(self):
@@ -109,8 +136,8 @@ class BaseAgent(pygame.sprite.Sprite):
             self.image = pygame.transform.flip(self.image, flip_x = True, flip_y=False,).convert_alpha()
 
 class Player(BaseAgent):
-    def __init__(self, pos, groups, collision_group, image=None, spritesheet=None, animation_speed=1):
-        super().__init__(pos, groups, collision_group, image, spritesheet, animation_speed)
+    def __init__(self, pos, groups, collision_group, image=None, spritesheet=None, animation_speed=1, **kwargs):
+        super().__init__(pos, groups, collision_group, image, spritesheet, animation_speed, **kwargs)
 
     def keyboard_input(self):
         keys_pressed = pygame.key.get_pressed()
@@ -138,17 +165,19 @@ class Player(BaseAgent):
         self.hitbox_rect.centerx = round(self.pos.x)
         self.rect.centerx = self.hitbox_rect.centerx
 
-        self.test_rect.centerx = self.rect.centerx
+        # self.test_rect.centerx = self.rect.centerx
 
         self.collision_calculation(direction='horizontal')
 
         #-- Update coordinates in VERTICAL direction
         self.pos.y += self.direction.y * self.speed
-        self.hitbox_rect.centery = round(self.pos.y)
-        self.rect.centery = self.hitbox_rect.centery
+        #self.hitbox_rect.centery = round(self.pos.y)
+        self.rect.centery = round(self.pos.y)
+        self.hitbox_rect.bottom = self.rect.bottom
+        #self.rect.centery = self.hitbox_rect.centery
 
 
-        self.test_rect.bottom = self.rect.bottom
+        # self.test_rect.bottom = self.rect.bottom
 
         self.collision_calculation(direction='vertical')
 
