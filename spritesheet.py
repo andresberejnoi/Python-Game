@@ -16,9 +16,9 @@ class SpriteSheet():
         self.num_rows = num_rows
 
     @staticmethod
-    def load_from_file(spritesheet_file, single_width=24, single_height=24):
+    def load_from_file(spritesheet_file, single_width=24, single_height=24, num_cols=8, num_rows=1):
         img = pygame.image.load(spritesheet_file).convert_alpha()
-        return SpriteSheet(img, single_width=single_width, single_height=single_height)
+        return SpriteSheet(img, single_width=single_width, single_height=single_height, num_cols=num_cols, num_rows=num_rows)
 
     def get_image(self, frame_pos, width=None, height=None, scale=1, chromakey=(0,0,0)):
         if width is None:
