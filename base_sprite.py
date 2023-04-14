@@ -48,7 +48,6 @@ class PrimordialSprite(pygame.sprite.Sprite):
         self._frame_idx        = 0
 
         self._sprite_scale      = sprite_scale
-        print("Chromakey:",self._sprite_chromakey)
         self._sprites_sequence = self._extract_sprite_sequence(scale=self._sprite_scale, chromakey=self._sprite_chromakey)
 
     def _extract_sprite_sequence(self, scale=3, chromakey=BLACK):
