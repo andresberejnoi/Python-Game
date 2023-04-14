@@ -31,12 +31,14 @@ class Camera(pygame.sprite.Group):
         #self.zoom_keys()
 
         _sorted_sprites = self._sort_sprites(sort_target='hitbox')
-        #for sprite in sorted(self.sprites(), key = lambda sprite: sprite.rect.centery):
         for sprite in _sorted_sprites:
-            pygame.draw.rect(self.display_surface, RED, sprite.hitbox_rect, 1)
-            pygame.draw.rect(self.display_surface, DARKVIOLET, sprite.rect, 1)
+            #-- draw bounding boxes, for debugging purposes
+            #pygame.draw.rect(self.display_surface, RED, sprite.hitbox_rect, 1)
+            #pygame.draw.rect(self.display_surface, DARKVIOLET, sprite.rect, 1)
             #pygame.draw.rect(self.display_surface, BLUE, sprite.test_rect, 1)
-            self.display_surface.blit(sprite.image, sprite.rect)
+
+            offset_vector = sprite.rect.topleft - self.camera_offset
+            self.display_surface.blit(sprite.image, offset_vector)
 
     def _sort_sprites(self, sort_target='hitbox'):
         if sort_target.lower() == 'hitbox':
