@@ -1,31 +1,26 @@
 import pygame
 from config import *
+from base_sprite import PrimordialSprite
 
-class BaseObject(pygame.sprite.Sprite):
-    def __init__(self, pos, groups, image, spritesheet = None, animation_speed = 1):
-        super().__init__(groups)
+#class BaseObject(pygame.sprite.Sprite):
+class BaseObject(PrimordialSprite):
+    def __init__(self, pos, groups, image=None, spritesheet = None, animation_speed = 1, **kwargs):
+        super().__init__(pos=pos, 
+                         groups=groups, 
+                         image=image, 
+                         spritesheet = spritesheet, 
+                         animation_speed = animation_speed, 
+                         **kwargs)
 
-        self.image = image or pygame.Surface((50,50))
-        self.spritesheet = spritesheet
-
-        #-- Rectangle and position elements
-        self.rect = self.image.get_rect(center = pos)
-        self.pos  = pygame.math.Vector2(self.rect.center)
-
-        #-- Collision elements
-        self._hitbox_shrink_x_factor = 0.15
-        self._hitbox_shrink_y_factor = 0.85
-        self.hitbox_rect = self.rect.copy().inflate(-self.rect.width * self._hitbox_shrink_x_factor,  #make hitbox rect slightly smaller than image rect
-                                                    -self.rect.height * self._hitbox_shrink_y_factor)
-        self.hitbox_rect.bottom = self.rect.bottom
-
-
-        self.test_rect = self.rect.copy().inflate(-self.rect.width * self._hitbox_shrink_x_factor,  #make hitbox rect slightly smaller than image rect
-                                                  -self.rect.height * self._hitbox_shrink_y_factor)
-        self.test_rect.bottom = self.rect.bottom
 
 class Rock(BaseObject):
-    def __init__(self, pos, groups, image, spritesheet=None, animation_speed=1):
-        super().__init__(pos, groups, image, spritesheet, animation_speed)
+    def __init__(self, pos, groups, image=None, spritesheet=None, animation_speed=1, **kwargs):
+        super().__init__(pos=pos, 
+                         groups=groups, 
+                         image=image, 
+                         spritesheet=spritesheet, 
+                         animation_speed=animation_speed, 
+                         hitbox_shrink_factor=(0.35,0.85), 
+                         **kwargs)
 
         
