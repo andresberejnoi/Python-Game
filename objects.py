@@ -14,9 +14,11 @@ class BaseObject(pygame.sprite.Sprite):
 
         #-- Collision elements
         self._hitbox_shrink_x_factor = 0.15
-        self._hitbox_shrink_y_factor = 0.80
+        self._hitbox_shrink_y_factor = 0.85
         self.hitbox_rect = self.rect.copy().inflate(-self.rect.width * self._hitbox_shrink_x_factor,  #make hitbox rect slightly smaller than image rect
                                                     -self.rect.height * self._hitbox_shrink_y_factor)
+        self.hitbox_rect.bottom = self.rect.bottom
+
 
         self.test_rect = self.rect.copy().inflate(-self.rect.width * self._hitbox_shrink_x_factor,  #make hitbox rect slightly smaller than image rect
                                                   -self.rect.height * self._hitbox_shrink_y_factor)
