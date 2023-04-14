@@ -1,3 +1,14 @@
+"""
+
+Credits and Resources
+---------------------
+
+I followed a tutorial that helped me implement this camera
+that follows the player and can zoom in and out.
+Here is the link:
+    * https://youtu.be/u7LPRqrzry8
+"""
+
 import pygame
 from config import * 
 
