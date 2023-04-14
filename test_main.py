@@ -1,6 +1,6 @@
 import pygame
 import agents
-import objects
+from objects import Rock
 import spritesheet
 from camera import Camera
 from config import *
@@ -35,7 +35,7 @@ rock_spritesheet = spritesheet.SpriteSheet.load_from_file(os.path.join(GRAPHICS_
                                                           single_width=25,
                                                           single_height=25)
 
-img_rock = rock_spritesheet.get_image((0,0), scale=2, chromakey=WHITE)
+#img_rock = rock_spritesheet.get_image((0,0), scale=2, chromakey=WHITE)
 
 #==================================
 #-- Initialize player, agents, and objects
@@ -43,7 +43,9 @@ player = agents.Player(
     pos             = (SCREEN_WIDTH//2, SCREEN_HEIGHT//2), 
     groups          = camera_group, 
     collision_group = collision_group, 
-    spritesheet     = player_spritesheet
+    spritesheet     = player_spritesheet,
+    sprite_scale    = 2,
+    speed = 3
 )
 
 rock_locations = [
@@ -55,7 +57,14 @@ rock_locations = [
 
 rocks = []
 for pos in rock_locations:
-    rocks.append(objects.Rock(pos=pos, groups=[camera_group, collision_group], image=img_rock, spritesheet=rock_spritesheet))
+    rock = Rock(
+        pos=pos, 
+        groups=[camera_group, collision_group], 
+        spritesheet=rock_spritesheet, 
+        sprite_scale=3,
+        sprite_chromakey=WHITE
+    )
+    rocks.append(rock)
 
 #==========================================
 #--------------MAIN GAME LOOP--------------
