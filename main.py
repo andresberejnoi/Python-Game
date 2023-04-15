@@ -1,6 +1,7 @@
 import pygame
 import agents
 from objects import Rock
+from sound import SoundMaster
 import spritesheet
 from camera import Camera
 from config import *
@@ -10,7 +11,12 @@ import os
 
 #==================================
 #-- Initialize Pygame
+pygame.mixer.pre_init(44100, size=-16, channels=2, buffer=512)
 pygame.init()
+pygame.mixer.init()
+
+#-- Set cursor image
+pygame.mouse.set_cursor(*pygame.cursors.broken_x)
 
 #-- Setup the display
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -24,6 +30,16 @@ clock = pygame.time.Clock()
 camera_group    = Camera()  #pygame.sprite.Group()
 collision_group = pygame.sprite.Group()
 
+#==================================
+#-- Sound Section
+sound_master = SoundMaster()
+sound_files  = ['walking_gravel.ogg']
+for sound in sound_files:
+    sound_master.add_sound('player_walking', sound)
+
+sound_walking = pygame.mixer.Sound(os.path.join(SOUNDS_FOLDER, 'walking_gravel.ogg'))
+
+print(sound_master.sounds)
 #==================================
 #-- Preparing sprites and related stuff
 player_spritesheet = spritesheet.SpriteSheet.load_from_file(os.path.join(GRAPHICS_FOLDER, "human_regular_hair.png"),
@@ -45,14 +61,17 @@ player = agents.Player(
     collision_group = collision_group, 
     spritesheet     = player_spritesheet,
     sprite_scale    = 2,
-    speed = 3
+    speed           = 3,
+
+    sound_master    = sound_master,
 )
 
 rock_locations = [
-    (400,150),
-    (700,100),
-    (500,400),
-    (150,450),
+    (400, 150),
+    (700, 100),
+    (500, 400),
+    (150, 450),
+    (256, 256),
 ]
 
 rocks = []
@@ -84,6 +103,14 @@ while keep_running:
         # detect zoom from mousewheel
         elif event.type == pygame.MOUSEWHEEL:
             camera_group.zoom_level += event.y * 0.03
+
+        elif event.type == pygame.KEYDOWN:
+            if event.key in [pygame.K_w, pygame.K_s, pygame.K_a, pygame.K_d]:
+                sound_walking.play()
+        
+        elif event.type == pygame.KEYUP:
+            if event.key in [pygame.K_w, pygame.K_s, pygame.K_a, pygame.K_d]:
+                sound_walking.stop()
     #===========================
     #-- Display
     #screen.blit(player.image, player.pos, player.rect)
