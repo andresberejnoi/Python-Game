@@ -14,6 +14,11 @@ class PrimordialSprite(pygame.sprite.Sprite):
                  **kwargs):
         super().__init__(groups)
 
+
+        #-- Setup all kwargs passed as instance variables. This might be a bad idea 
+        for key in kwargs:
+            setattr(self, key, kwargs[key])
+
         self._sprite_chromakey  = kwargs.get('sprite_chromakey', BLACK)
         if image is None:
             if spritesheet is not None:
