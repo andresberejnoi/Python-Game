@@ -87,6 +87,7 @@ class Camera(pygame.sprite.Group):
         _sorted_sprites = self._sort_sprites('hitbox')
         for sprite in _sorted_sprites:
             offset_vector = sprite.rect.topleft - self.camera_offset + self.internal_offset
+            #self._draw_sprite_shadow(self.internal_surface, sprite, offset=offset_vector)
             self.internal_surface.blit(sprite.image, offset_vector)
 
         #-- Scale internal surface according to zoom level
@@ -98,6 +99,7 @@ class Camera(pygame.sprite.Group):
 
 
     def _sort_sprites(self, sort_target='hitbox'):
+
         if sort_target.lower() == 'hitbox':
             _sorted = sorted(self.sprites(), key = lambda sprite: sprite.hitbox_rect.top)
         
@@ -105,3 +107,12 @@ class Camera(pygame.sprite.Group):
             _sorted = sorted(self.sprites(), key = lambda sprite: sprite.rect.centery)
 
         return _sorted
+    
+
+    def _draw_sprite_shadow(self, screen, sprite, offset):
+        surf = pygame.Surface((sprite.hitbox_rect.width, sprite.hitbox_rect.height), pygame.SRCALPHA)
+        pygame.draw.ellipse(surf, (*GRAY, 100), sprite.hitbox_rect)  #the *GRAY just unpacks the RGB tuple so that I can add the alpha value as well
+        #rect = surf.get_rect()
+        
+        screen.blit(surf, sprite.hitbox_rect)
+
