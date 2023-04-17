@@ -22,5 +22,14 @@ class Rock(BaseObject):
                          animation_speed=animation_speed, 
                          hitbox_shrink_factor=(0.35,0.85), 
                          **kwargs)
+        
+    def update(self, events=None):
+        if events is not None:
+            for event in events:
+                if event.type == pygame.MOUSEBUTTONUP and event.button == 1:   #if left click was pressed
+                    print(event)
+                    if self.hitbox_rect.collidepoint(event.pos):
+                        print("rock has been clicked!!")
+                        self.kill() 
 
         
