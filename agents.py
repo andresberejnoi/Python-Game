@@ -92,6 +92,10 @@ class Player(BaseAgent):
         else:
             self.direction.y = 0
     
+        # if self.direction.x != 0 or self.direction.y != 0:
+        #     #-- Play sounds
+        #     walking_sound = self.sound_master.get_sound('player_walking')
+        #     pygame.mixer.Sound.play(walking_sound)
     
     def update(self, events=None):
         self.keyboard_input()
@@ -112,6 +116,8 @@ class Player(BaseAgent):
 
         #-- Update sprite based on animation sequence
         self._animation_control()
+
+
         
 
     
