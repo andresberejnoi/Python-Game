@@ -86,6 +86,11 @@ class Camera(pygame.sprite.Group):
 
         _sorted_sprites = self._sort_sprites('hitbox')
         for sprite in _sorted_sprites:
+            #-- draw bounding boxes, for debugging purposes
+            pygame.draw.rect(self.internal_surface, RED, sprite.hitbox_rect, 1)
+            pygame.draw.rect(self.internal_surface, DARKVIOLET, sprite.rect, 1)
+            #pygame.draw.rect(self.display_surface, BLUE, sprite.test_rect, 1)
+
             offset_vector = sprite.rect.topleft - self.camera_offset + self.internal_offset
             #self._draw_sprite_shadow(self.internal_surface, sprite, offset=offset_vector)
             self.internal_surface.blit(sprite.image, offset_vector)
